@@ -1,0 +1,56 @@
+name: macOS SSH Terminal + localtonet (Random Password - No Secret)
+
+on: workflow_dispatch
+
+jobs:
+  macos-ssh-terminal:
+    runs-on: macos-latest
+    timeout-minutes: 9999
+
+    steps:
+      - name: Generate Strong Password + Enable SSH Terminal
+        run: |
+          VM_PWD=$(openssl rand -base64 32 | tr -dc 'A-Za-z0-9!@#%^&*' | head -c 16)
+          
+          echo "🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑"
+          echo "🔑 YOUR SSH PASSWORD: $VM_PWD"
+          echo "🔑 (এটা কপি করে রাখো! একবার দেখা যাবে)"
+          echo "🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑"
+          
+          # SSH চালু করা
+          sudo systemsetup -setremotelogin on
+          
+          # runner user-এর জন্য পাসওয়ার্ড সেট করা
+          sudo dscl . -passwd /Users/runner "$VM_PWD"
+          
+          echo "✅ SSH Server চালু হয়েছে (Port 22)"
+          echo "VM_PWD=$VM_PWD" >> $GITHUB_ENV
+
+      - name: Start SSH Tunnel (Auto-Reconnect) - Terminal Access
+        run: |
+          echo "---------------------------------------------------"
+          echo "🔗 Localtonet SSH Tunnel চালু হয়েছে"
+          echo "SSH Host : rfmvhp4qh.localto.net"
+          echo "SSH Port : 2222"
+          echo "Username : runner"
+          echo "Password : ${{ env.VM_PWD }}"
+          echo "---------------------------------------------------"
+          echo "Connect করার কমান্ড (যেকোনো টার্মিনাল থেকে):"
+          echo "ssh runner@rfmvhp4qh.localto.net -p 2222"
+          echo "---------------------------------------------------"
+
+          maxRetries=1000
+          retryCount=0
+
+          while [ $retryCount -lt $maxRetries ]; do
+            echo "Establishing SSH Tunnel... (Attempt: $retryCount)"
+            
+            ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=no \
+                -T -o RequestTTY=no \
+                -p 223 JDhgFf7lK6hCs3FoNydovMbIA_wfagsSN_rXMFDWfw82Y7DGAfZIulXiMsKqaf54gLwpZ3LKVMIDsmX0Z-fZPg@rfmvhp4qh.localto.net \
+                -R2222:127.0.0.1:22 -N || true
+            
+            echo "Tunnel Disconnected! Reconnecting in 5 seconds..."
+            sleep 5
+            retryCount=$((retryCount+1))
+          donedone
