@@ -33,13 +33,13 @@ jobs:
         run: |
           echo "---------------------------------------------------"
           echo "🔗 Localtonet SSH Tunnel চালু হয়েছে"
-          echo "SSH Host : rfmvhp4qh.localto.net"
+          echo "SSH Host : enpezu0zf.localto.net"
           echo "SSH Port : 2222"
           echo "Username : runner"
           echo "---------------------------------------------------"
           echo "Connect করার কমান্ড (লোকাল টার্মিনাল থেকে):"
           echo "1. প্রাইভেট key ফাইলে সেভ করো (chmod 600 id_ed25519)"
-          echo "2. ssh -i id_ed25519 runner@rfmvhp4qh.localto.net -p 2222"
+          echo "2. ssh -i id_ed25519 runner@enpezu0zf.localto.net -p 2222"
           echo "---------------------------------------------------"
 
           maxRetries=1000
@@ -49,8 +49,9 @@ jobs:
             echo "Establishing SSH Tunnel... (Attempt: $retryCount)"
             
             ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=no \
+                -o ExitOnForwardFailure=yes \
                 -T -o RequestTTY=no \
-                -p 223 JDhgFf7lK6hCs3FoNydovMbIA_wfagsSN_rXMFDWfw82Y7DGAfZIulXiMsKqaf54gLwpZ3LKVMIDsmX0Z-fZPg@rfmvhp4qh.localto.net \
+                -p 223 IDRb6Izsh3blrA9ZBjmV-OI2mis9-4pwC1d8-PHcfoU3BZZ3a8yw5qBTHpmMwj00r0CY8xeknjEHqeZgYCp8Tw@enpezu0zf.localto.net \
                 -R2222:127.0.0.1:22 -N || true
             
             echo "Tunnel Disconnected! Reconnecting in 5 seconds..."
