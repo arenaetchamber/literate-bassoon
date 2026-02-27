@@ -1,4 +1,4 @@
-name: macOS SSH Terminal + localtonet (Random Password - No Secret)
+name: macOS SSH Terminal + localtonet (Random SSH Key - No Secret)
 
 on: workflow_dispatch
 
@@ -8,23 +8,26 @@ jobs:
     timeout-minutes: 9999
 
     steps:
-      - name: Generate Strong Password + Enable SSH Terminal
+      - name: Enable SSH Terminal + Generate SSH Key
         run: |
-          VM_PWD=$(openssl rand -base64 32 | tr -dc 'A-Za-z0-9!@#%^&*' | head -c 16)
-          
-          echo "🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑"
-          echo "🔑 YOUR SSH PASSWORD: $VM_PWD"
-          echo "🔑 (এটা কপি করে রাখো! একবার দেখা যাবে)"
-          echo "🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑"
-          
-          # SSH চালু করা
+          # SSH চালু করা (যদি না থাকে)
           sudo systemsetup -setremotelogin on
           
-          # runner user-এর জন্য পাসওয়ার্ড সেট করা
-          sudo dscl . -passwd /Users/runner "$VM_PWD"
+          # SSH key জেনারেট করা (পাসফ্রেজ ছাড়া)
+          ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519 -q
           
-          echo "✅ SSH Server চালু হয়েছে (Port 22)"
-          echo "VM_PWD=$VM_PWD" >> $GITHUB_ENV
+          # Public key authorized_keys-এ যোগ করা
+          cat ~/.ssh/id_ed25519.pub >> ~/.ssh/authorized_keys
+          chmod 600 ~/.ssh/authorized_keys
+          
+          # প্রাইভেট key প্রিন্ট করা (কপি করে রাখো!)
+          echo "🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑"
+          echo "🔑 YOUR PRIVATE SSH KEY (কপি করে লোকাল ফাইলে সেভ করো, যেমন: id_ed25519):"
+          cat ~/.ssh/id_ed25519
+          echo "🔑 (এটা একবার দেখা যাবে — সিকিউরলি সেভ করো!)"
+          echo "🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑🔑"
+          
+          echo "✅ SSH Server চালু হয়েছে (Port 22) with Key Auth"
 
       - name: Start SSH Tunnel (Auto-Reconnect) - Terminal Access
         run: |
@@ -33,10 +36,10 @@ jobs:
           echo "SSH Host : rfmvhp4qh.localto.net"
           echo "SSH Port : 2222"
           echo "Username : runner"
-          echo "Password : ${{ env.VM_PWD }}"
           echo "---------------------------------------------------"
-          echo "Connect করার কমান্ড (যেকোনো টার্মিনাল থেকে):"
-          echo "ssh runner@rfmvhp4qh.localto.net -p 2222"
+          echo "Connect করার কমান্ড (লোকাল টার্মিনাল থেকে):"
+          echo "1. প্রাইভেট key ফাইলে সেভ করো (chmod 600 id_ed25519)"
+          echo "2. ssh -i id_ed25519 runner@rfmvhp4qh.localto.net -p 2222"
           echo "---------------------------------------------------"
 
           maxRetries=1000
@@ -53,4 +56,4 @@ jobs:
             echo "Tunnel Disconnected! Reconnecting in 5 seconds..."
             sleep 5
             retryCount=$((retryCount+1))
-          donedone
+          done
