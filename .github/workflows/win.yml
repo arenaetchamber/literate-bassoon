@@ -29,16 +29,19 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y xfce4 xfce4-goodies xrdp openssh-server
           
-          # FIXED 8-digit password (তুমি চাইলে এটা চেঞ্জ করো)
+          # FIXED 8-digit password
           password=12345678
           echo "=== RDP & SSH PASSWORD: $password ==="
           echo "=== এই পাসওয়ার্ডটা সেভ করে রাখো! ==="
           
           echo "runner:$password" | sudo chpasswd
           
-          # XRDP setup
-          echo "xfce4-session" > \~/.xsession
-          sudo chown runner:runner \~/.xsession
+          # XRDP setup — FULL PATH + sudo tee (error fix)
+          echo "=== Setting up XFCE session ==="
+          echo "xfce4-session" | sudo tee /home/runner/.xsession > /dev/null
+          sudo chown runner:runner /home/runner/.xsession
+          sudo chmod 644 /home/runner/.xsession
+          
           sudo adduser xrdp ssl-cert
           sudo systemctl restart xrdp
           
