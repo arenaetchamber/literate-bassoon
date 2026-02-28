@@ -12,7 +12,7 @@ jobs:
         shell: powershell
         run: |
           for($i=1; $i -le 8; $i++) { New-Item -Path "C:\Init$i" -ItemType Directory -Force }
-        continue-on-error: true   # ← যদি এটা ফেইল হয় তবু পরের স্টেপ চলবে
+        continue-on-error: true
 
       - name: Prepare Build Files
         shell: powershell
@@ -23,8 +23,14 @@ jobs:
       - name: Configure Access
         shell: powershell
         run: |
-          $password = -join ((33..126) | Get-Random -Count 18 | ForEach-Object {[char]$_})
+          # ==================== নতুন পাসওয়ার্ড জেনারেশন (শুধু Letter + Number) ====================
+          $password = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 18 | ForEach-Object {[char]$_})
+          Write-Host "=================================================="
           Write-Host "RDP PASSWORD: $password"
+          Write-Host "=================================================="
+          Write-Host "Username: runneradmin"
+          Write-Host "Host: l16z9pfrj.localto.net:6046"
+          Write-Host "=================================================="
 
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
@@ -32,7 +38,7 @@ jobs:
           net user runneradmin $password
         continue-on-error: true
 
-      # ==================== ২০টা নতুন স্টেপ (সবগুলোতেই continue-on-error যোগ করা হয়েছে) ====================
+      # ==================== ২০টা নতুন স্টেপ (আগের মতোই) ====================
       - name: Random Folder Creation Task 1
         shell: powershell
         run: |
@@ -215,7 +221,6 @@ jobs:
           "Last dummy data" | Out-File "C:\FinalSuperRandomTask20_$randName\final.txt"
           Write-Host "Task 20: Final ultra-random folder + file created (20 steps complete!)"
         continue-on-error: true
-      # ==================== ২০টা নতুন স্টেপ শেষ ====================
 
       - name: Start Tunnel
         shell: powershell
@@ -235,4 +240,3 @@ jobs:
               Start-Sleep -Seconds 5
               $retryCount++
           }
-        # Tunnel-এ continue-on-error রাখা হয়নি কারণ এটা চিরকাল চলবে
