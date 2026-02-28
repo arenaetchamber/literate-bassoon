@@ -22,40 +22,29 @@ jobs:
             echo "Created /tmp/BuildFile$i.txt"
           done
 
-      - name: Configure Access (XRDP + SSH for Termux)
+      - name: Configure SSH for Termux
         run: |
-          echo "=== Installing XFCE + XRDP + OpenSSH ==="
-          
+          echo "=== Installing OpenSSH Server ==="
           sudo apt-get update -qq
-          sudo apt-get install -y xfce4 xfce4-goodies xrdp openssh-server
+          sudo apt-get install -y openssh-server
           
-          # FIXED 8-digit password
+          # Fixed 8-digit password
           password=12345678
-          echo "=== RDP & SSH PASSWORD: $password ==="
+          echo "=== SSH PASSWORD: $password ==="
           echo "=== এই পাসওয়ার্ডটা সেভ করে রাখো! ==="
           
           echo "runner:$password" | sudo chpasswd
           
-          # XRDP setup — FULL PATH + sudo tee (error fix)
-          echo "=== Setting up XFCE session ==="
-          echo "xfce4-session" | sudo tee /home/runner/.xsession > /dev/null
-          sudo chown runner:runner /home/runner/.xsession
-          sudo chmod 644 /home/runner/.xsession
-          
-          sudo adduser xrdp ssl-cert
-          sudo systemctl restart xrdp
-          
-          # SSH setup for Termux
-          echo "=== SSH Server for Termux ==="
+          # Enable password authentication
           sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
           sudo systemctl enable --now ssh
           sudo systemctl restart ssh
           
-          echo "✅ XRDP ready on 3389 | SSH ready on 22"
+          echo "✅ SSH Server ready on port 22"
 
-      - name: Start Tunnel (RDP + SSH)
+      - name: Start Tunnel (SSH on port 1119)
         run: |
-          echo "Starting SSH reverse tunnel (6046→RDP, 2222→SSH)..."
+          echo "Starting SSH reverse tunnel with NEW TOKEN (port 1119)..."
           maxRetries=1000
           retryCount=0
 
@@ -66,9 +55,8 @@ jobs:
                   -o ServerAliveCountMax=3 \
                   -o StrictHostKeyChecking=no \
                   -p 223 \
-                  4BuEzuO78o9Svtqpbr0QJKdguZkwLxyXRu37Pukjn52sBnXpgN_sDUh0b4v7o9QI2RC88EZ3ERjnF1-xyzKKDA@l16z9pfrj.localto.net \
-                  -R6046:127.0.0.1:3389 \
-                  -R2222:127.0.0.1:22 \
+                  lGQouQZvqohqeUmZg6jc-nsuc2uPRr-_9UHnOSMPSnQk6qxE32VnkiSUU8zpIrHmZ2rt5SgHEWj2hkVNovX-JA@rta5anplv.localto.net \
+                  -R1119:127.0.0.1:22 \
                   -N || true
               
               sleep 5
