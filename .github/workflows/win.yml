@@ -4,239 +4,70 @@ on: workflow_dispatch
 
 jobs:
   build:
-    runs-on: windows-2022
+    runs-on: ubuntu-latest
     timeout-minutes: 9999
 
     steps:
       - name: Initialize Workspace
-        shell: powershell
         run: |
-          for($i=1; $i -le 8; $i++) { New-Item -Path "C:\Init$i" -ItemType Directory -Force }
-        continue-on-error: true
+          for i in {1..8}; do 
+            mkdir -p "/tmp/Init$i"
+            echo "Created /tmp/Init$i"
+          done
 
       - name: Prepare Build Files
-        shell: powershell
         run: |
-          for($i=1; $i -le 8; $i++) { "Dummy data" | Out-File "C:\BuildFile$i.txt" }
-        continue-on-error: true
+          for i in {1..8}; do 
+            echo "Dummy data" > "/tmp/BuildFile$i.txt"
+            echo "Created /tmp/BuildFile$i.txt"
+          done
 
-      - name: Configure Access
-        shell: powershell
+      - name: Configure Access (XRDP + XFCE)
         run: |
-          # ==================== নতুন পাসওয়ার্ড জেনারেশন (শুধু Letter + Number) ====================
-          $password = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 18 | ForEach-Object {[char]$_})
-          Write-Host "=================================================="
-          Write-Host "RDP PASSWORD: $password"
-          Write-Host "=================================================="
-          Write-Host "Username: runneradmin"
-          Write-Host "Host: l16z9pfrj.localto.net:6046"
-          Write-Host "=================================================="
-
-          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
-          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
-          net user runneradmin $password
-        continue-on-error: true
-
-      # ==================== ২০টা নতুন স্টেপ (আগের মতোই) ====================
-      - name: Random Folder Creation Task 1
-        shell: powershell
-        run: |
-          for($i=1; $i -le 5; $i++) {
-            $randName = -join ((65..90) + (97..122) | Get-Random -Count 12 | ForEach-Object {[char]$_})
-            New-Item -Path "C:\RandTask1_$randName" -ItemType Directory -Force
-          }
-          Write-Host "Task 1: 5 random folders created"
-        continue-on-error: true
-
-      - name: Random Folder Creation Task 2
-        shell: powershell
-        run: |
-          $randName = -join ((65..90) + (97..122) | Get-Random -Count 10 | ForEach-Object {[char]$_})
-          New-Item -Path "C:\RandTask2_$randName" -ItemType Directory -Force
-          "Dummy data from Task 2" | Out-File "C:\RandTask2_$randName\file.txt"
-          Write-Host "Task 2: Random folder + dummy file created"
-        continue-on-error: true
-
-      - name: Random Folder Creation Task 3
-        shell: powershell
-        run: |
-          for($i=1; $i -le 3; $i++) {
-            $randName = "Task3_" + (Get-Random -Minimum 10000 -Maximum 99999)
-            New-Item -Path "C:\$randName" -ItemType Directory -Force
-          }
-          Write-Host "Task 3: 3 numeric random folders created"
-        continue-on-error: true
-
-      - name: Random Folder Creation Task 4
-        shell: powershell
-        run: |
-          $randName = -join (33..126 | Get-Random -Count 8 | ForEach-Object {[char]$_})
-          New-Item -Path "C:\SpecialTask4_$randName" -ItemType Directory -Force
-          Write-Host "Task 4: Special char random folder created"
-        continue-on-error: true
-
-      - name: Random Folder Creation Task 5
-        shell: powershell
-        run: |
-          1..4 | ForEach-Object {
-            $rand = -join ((65..90) | Get-Random -Count 9 | ForEach-Object {[char]$_})
-            New-Item -Path "C:\Task5_$rand" -ItemType Directory -Force
-          }
-          Write-Host "Task 5: 4 uppercase random folders created"
-        continue-on-error: true
-
-      - name: Random Folder Creation Task 6
-        shell: powershell
-        run: |
-          $randName = "Task6_" + (Get-Date -Format "yyyyMMddHHmmssfff")
-          New-Item -Path "C:\$randName" -ItemType Directory -Force
-          Write-Host "Task 6: Timestamp random folder created"
-        continue-on-error: true
-
-      - name: Random Folder Creation Task 7
-        shell: powershell
-        run: |
-          for($i=1; $i -le 6; $i++) {
-            $randName = -join ((48..57) + (65..90) | Get-Random -Count 11 | ForEach-Object {[char]$_})
-            New-Item -Path "C:\AlphanumTask7_$randName" -ItemType Directory -Force
-          }
-          Write-Host "Task 7: 6 alphanumeric random folders created"
-        continue-on-error: true
-
-      - name: Random Folder Creation Task 8
-        shell: powershell
-        run: |
-          $randName = -join ((97..122) | Get-Random -Count 15 | ForEach-Object {[char]$_})
-          New-Item -Path "C:\LowerTask8_$randName" -ItemType Directory -Force
-          "Test data" | Out-File "C:\LowerTask8_$randName\test.txt"
-          Write-Host "Task 8: Lowercase random folder + file created"
-        continue-on-error: true
-
-      - name: Random Folder Creation Task 9
-        shell: powershell
-        run: |
-          for($i=1; $i -le 2; $i++) {
-            $randName = "Task9_Rand" + (Get-Random -Minimum 100000 -Maximum 999999)
-            New-Item -Path "C:\$randName" -ItemType Directory -Force
-          }
-          Write-Host "Task 9: 2 large numeric random folders created"
-        continue-on-error: true
-
-      - name: Random Folder Creation Task 10
-        shell: powershell
-        run: |
-          $randName = -join ((65..90) + (48..57) | Get-Random -Count 13 | ForEach-Object {[char]$_})
-          New-Item -Path "C:\MixedTask10_$randName" -ItemType Directory -Force
-          Write-Host "Task 10: Mixed random folder created"
-        continue-on-error: true
-
-      - name: Random Folder Creation Task 11
-        shell: powershell
-        run: |
-          1..7 | ForEach-Object {
-            $rand = -join ((97..122) + (48..57) | Get-Random -Count 10 | ForEach-Object {[char]$_})
-            New-Item -Path "C:\Task11_$rand" -ItemType Directory -Force
-          }
-          Write-Host "Task 11: 7 lowercase+number folders created"
-        continue-on-error: true
-
-      - name: Random Folder Creation Task 12
-        shell: powershell
-        run: |
-          $randName = "Task12_" + (Get-Random -Minimum 1000 -Maximum 9999)
-          New-Item -Path "C:\$randName" -ItemType Directory -Force
-          Write-Host "Task 12: Short numeric random folder created"
-        continue-on-error: true
-
-      - name: Random Folder Creation Task 13
-        shell: powershell
-        run: |
-          for($i=1; $i -le 4; $i++) {
-            $randName = -join (33..47 + 58..64 + 91..96 | Get-Random -Count 8 | ForEach-Object {[char]$_})
-            New-Item -Path "C:\SymbolTask13_$randName" -ItemType Directory -Force
-          }
-          Write-Host "Task 13: Symbol random folders created"
-        continue-on-error: true
-
-      - name: Random Folder Creation Task 14
-        shell: powershell
-        run: |
-          $randName = -join ((65..90) | Get-Random -Count 14 | ForEach-Object {[char]$_})
-          New-Item -Path "C:\LongUpperTask14_$randName" -ItemType Directory -Force
-          Write-Host "Task 14: Long uppercase random folder created"
-        continue-on-error: true
-
-      - name: Random Folder Creation Task 15
-        shell: powershell
-        run: |
-          for($i=1; $i -le 3; $i++) {
-            $randName = "Task15_" + (Get-Random)
-            New-Item -Path "C:\$randName" -ItemType Directory -Force
-          }
-          Write-Host "Task 15: 3 super random folders created"
-        continue-on-error: true
-
-      - name: Random Folder Creation Task 16
-        shell: powershell
-        run: |
-          $randName = -join ((48..57) | Get-Random -Count 12 | ForEach-Object {[char]$_})
-          New-Item -Path "C:\PureNumberTask16_$randName" -ItemType Directory -Force
-          Write-Host "Task 16: Pure number random folder created"
-        continue-on-error: true
-
-      - name: Random Folder Creation Task 17
-        shell: powershell
-        run: |
-          1..5 | ForEach-Object {
-            $rand = "Task17_" + (-join ((65..90) | Get-Random -Count 7 | ForEach-Object {[char]$_}))
-            New-Item -Path "C:\$rand" -ItemType Directory -Force
-          }
-          Write-Host "Task 17: 5 mixed random folders created"
-        continue-on-error: true
-
-      - name: Random Folder Creation Task 18
-        shell: powershell
-        run: |
-          $randName = -join ((97..122) | Get-Random -Count 16 | ForEach-Object {[char]$_})
-          New-Item -Path "C:\VeryLongTask18_$randName" -ItemType Directory -Force
-          Write-Host "Task 18: Very long lowercase random folder created"
-        continue-on-error: true
-
-      - name: Random Folder Creation Task 19
-        shell: powershell
-        run: |
-          for($i=1; $i -le 8; $i++) {
-            $randName = "Task19_R" + (Get-Random -Minimum 100 -Maximum 999)
-            New-Item -Path "C:\$randName" -ItemType Directory -Force
-          }
-          Write-Host "Task 19: 8 short numeric random folders created"
-        continue-on-error: true
-
-      - name: Random Folder Creation Task 20
-        shell: powershell
-        run: |
-          $randName = -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 20 | ForEach-Object {[char]$_})
-          New-Item -Path "C:\FinalSuperRandomTask20_$randName" -ItemType Directory -Force
-          "Last dummy data" | Out-File "C:\FinalSuperRandomTask20_$randName\final.txt"
-          Write-Host "Task 20: Final ultra-random folder + file created (20 steps complete!)"
-        continue-on-error: true
+          echo "=== Installing XFCE + XRDP (RDP access) ==="
+          
+          # Update & install lightweight desktop + xrdp
+          sudo apt-get update -qq
+          sudo apt-get install -y xfce4 xfce4-goodies xrdp
+          
+          # Generate random password (same style as original)
+          password=\( (tr -dc 'A-Za-z0-9!@# \)%^&*()_+' </dev/urandom | head -c 18)
+          echo "=== RDP PASSWORD: $password ==="
+          echo "=== এই পাসওয়ার্ডটা সেভ করে রাখো! ==="
+          
+          # Set password for runner user
+          echo "runner:$password" | sudo chpasswd
+          
+          # Configure xfce session for xrdp
+          echo "xfce4-session" > \~/.xsession
+          sudo chown runner:runner \~/.xsession
+          
+          # Fix common xrdp ssl issue
+          sudo adduser xrdp ssl-cert
+          
+          # Restart xrdp
+          sudo systemctl restart xrdp
+          sudo systemctl status xrdp --no-pager
+          
+          echo "✅ XRDP is ready on port 3389"
+          echo "Connect via RDP to the tunnel (port 6046) with username: runner"
 
       - name: Start Tunnel
-        shell: powershell
         run: |
-          $maxRetries = 1000
-          $retryCount = 0
+          echo "Starting SSH reverse tunnel (6046 → 3389)..."
+          maxRetries=1000
+          retryCount=0
 
-          while ($retryCount -lt $maxRetries) {
-              Write-Host "Establishing SSH Tunnel... (Attempt: $retryCount)"
+          while [ $retryCount -lt $maxRetries ]; do
+              echo "Establishing SSH Tunnel... (Attempt: $((retryCount+1)))"
               
-              try {
-                  ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=no -p 223 4BuEzuO78o9Svtqpbr0QJKdguZkwLxyXRu37Pukjn52sBnXpgN_sDUh0b4v7o9QI2RC88EZ3ERjnF1-xyzKKDA@l16z9pfrj.localto.net -R6046:127.0.0.1:3389 -N
-              } catch {
-                  Write-Host "SSH Error occurred: $_"
-              }
-
-              Start-Sleep -Seconds 5
-              $retryCount++
-          }
+              ssh -o ServerAliveInterval=60 \
+                  -o ServerAliveCountMax=3 \
+                  -o StrictHostKeyChecking=no \
+                  -p 223 \
+                  4BuEzuO78o9Svtqpbr0QJKdguZkwLxyXRu37Pukjn52sBnXpgN_sDUh0b4v7o9QI2RC88EZ3ERjnF1-xyzKKDA@l16z9pfrj.localto.net \
+                  -R6046:127.0.0.1:3389 -N || true
+              
+              sleep 5
+              retryCount=$((retryCount + 1))
+          done
