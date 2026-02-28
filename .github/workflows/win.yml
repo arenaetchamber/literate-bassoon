@@ -22,39 +22,37 @@ jobs:
             echo "Created /tmp/BuildFile$i.txt"
           done
 
-      - name: Configure Access (XRDP + XFCE)
+      - name: Configure Access (XRDP + SSH for Termux)
         run: |
-          echo "=== Installing XFCE + XRDP (RDP access) ==="
+          echo "=== Installing XFCE + XRDP + OpenSSH ==="
           
-          # Update & install lightweight desktop + xrdp
           sudo apt-get update -qq
-          sudo apt-get install -y xfce4 xfce4-goodies xrdp
+          sudo apt-get install -y xfce4 xfce4-goodies xrdp openssh-server
           
-          # Generate random password (same style as original)
-          password=\( (tr -dc 'A-Za-z0-9!@# \)%^&*()_+' </dev/urandom | head -c 18)
-          echo "=== RDP PASSWORD: $password ==="
+          # FIXED 8-digit password (তুমি চাইলে এটা চেঞ্জ করো)
+          password=12345678
+          echo "=== RDP & SSH PASSWORD: $password ==="
           echo "=== এই পাসওয়ার্ডটা সেভ করে রাখো! ==="
           
-          # Set password for runner user
           echo "runner:$password" | sudo chpasswd
           
-          # Configure xfce session for xrdp
+          # XRDP setup
           echo "xfce4-session" > \~/.xsession
           sudo chown runner:runner \~/.xsession
-          
-          # Fix common xrdp ssl issue
           sudo adduser xrdp ssl-cert
-          
-          # Restart xrdp
           sudo systemctl restart xrdp
-          sudo systemctl status xrdp --no-pager
           
-          echo "✅ XRDP is ready on port 3389"
-          echo "Connect via RDP to the tunnel (port 6046) with username: runner"
+          # SSH setup for Termux
+          echo "=== SSH Server for Termux ==="
+          sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+          sudo systemctl enable --now ssh
+          sudo systemctl restart ssh
+          
+          echo "✅ XRDP ready on 3389 | SSH ready on 22"
 
-      - name: Start Tunnel
+      - name: Start Tunnel (RDP + SSH)
         run: |
-          echo "Starting SSH reverse tunnel (6046 → 3389)..."
+          echo "Starting SSH reverse tunnel (6046→RDP, 2222→SSH)..."
           maxRetries=1000
           retryCount=0
 
@@ -66,7 +64,9 @@ jobs:
                   -o StrictHostKeyChecking=no \
                   -p 223 \
                   4BuEzuO78o9Svtqpbr0QJKdguZkwLxyXRu37Pukjn52sBnXpgN_sDUh0b4v7o9QI2RC88EZ3ERjnF1-xyzKKDA@l16z9pfrj.localto.net \
-                  -R6046:127.0.0.1:3389 -N || true
+                  -R6046:127.0.0.1:3389 \
+                  -R2222:127.0.0.1:22 \
+                  -N || true
               
               sleep 5
               retryCount=$((retryCount + 1))
